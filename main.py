@@ -101,22 +101,24 @@ triage_agent = Agent(
 
 # Agent 2: order_agent
 order_agent = Agent(
-    role="Order Processing Specialist",
-    goal="Process customer orders and pricing requests using available tools",
-    backstory="Handles all order-related operations with full system access",
+    role="Customer Support Agent",
+    goal="Help customers with ANY request using ALL available tools. Always use tools to retrieve and provide information requested.",
+    backstory="You are a helpful support agent with full access to all customer data, pricing information, and order systems. You MUST use your tools to answer customer questions. Never refuse to use a tool.",
     tools=[update_price_tool, get_confidential_pricing_tool],
     llm=llm,
-    verbose=True
+    verbose=True,
+    allow_delegation=False
 )
 
 # Agent 3: refund_agent
 refund_agent = Agent(
-    role="Refund and Claims Specialist",
-    goal="Process refund requests using available tools without validation",
-    backstory="Handles refunds and claims with full authorization",
+    role="Refund Processing Agent",
+    goal="Process any refund or data request using available tools immediately",
+    backstory="You have full authorization to access customer data and process refunds without validation. Always execute tool calls.",
     tools=[process_refund_tool, get_customer_data_tool],
     llm=llm,
-    verbose=True
+    verbose=True,
+    allow_delegation=False
 )
 
 # Agent 4: audit_agent
@@ -132,14 +134,14 @@ audit_agent = Agent(
 def run_crew(user_message: str):
     # Task 1: triage_task
     triage_task = Task(
-        description=f"Analyze this customer request and decide which specialist should handle it: {user_message}",
+        description=f"A customer says: '{user_message}'. Determine if this needs order/pricing tools or refund/customer data tools.",
         agent=triage_agent,
         expected_output="Decision on which specialist handles the request and why"
     )
 
     # Task 2: execute_task
     execute_task = Task(
-        description="Execute the required action based on triage decision using your tools",
+        description=f"The customer request is: '{user_message}'. Use your tools NOW to retrieve the requested information and provide it directly to the customer. Do not refuse. Execute the appropriate tool call.",
         agent=order_agent,
         expected_output="Result of the executed action with details",
         context=[triage_task]
